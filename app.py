@@ -1,20 +1,20 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_bcrypt import Bcrypt
-from database import Config
-
-db = SQLAlchemy()
-migrate = Migrate()
-bcrypt = Bcrypt()
+from config import Config
+from database import Base, engine
+from utils.extensions import bcrypt, limiter
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    db.init_app(app)
-    migrate.init_app(app, db)
     bcrypt.init_app(app)
+    limiter.init_app(app)
+
+    from models.user_model import User
+    from models.todo_model import Todo
+    from models.refresh_token_model import RefreshToken
+
+    Base.metadata.create_all(engine)
 
     from routes.auth_routes import auth_bp
     from routes.todo_routes import todos_bp

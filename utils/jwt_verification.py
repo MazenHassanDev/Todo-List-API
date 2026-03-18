@@ -1,14 +1,20 @@
 import jwt
 import os
+import secrets
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import request, jsonify
+from flask import request, jsonify 
+from flask_limiter.util import get_remote_address
 
 SECRET_KEY = os.getenv('SECRET_KEY')
+
+# ACCESS TOKEN
+# -------------------------------------------------------------------------
 
 def generate_token(user_id):
     payload = {
         'user_id': user_id,
+        'type': 'access',
         'exp': datetime.utcnow() + timedelta(days=1)
     }
     
@@ -24,6 +30,33 @@ def verify_token(token):
     except jwt.InvalidTokenError:
         return None
     
+# REFRESH TOKEN
+# -------------------------------------------------------------------------
+
+def generate_refresh_token():
+    return secrets.token_hex(64)
+
+def get_refresh_token_expiry():
+    return datetime.utcnow() + timedelta(days=7)
+    
+# LIMITER HELPER
+# -------------------------------------------------------------------------
+def get_current_user_id():
+    try:
+        auth_header = request.headers['Authorization']
+        if not auth_header:
+            return get_remote_address()
+        token = auth_header.split(" ")[1]
+        payload = verify_token(token)
+        if not payload:
+            return get_remote_address()
+        return payload['user_id']
+    except:
+        return get_remote_address()
+    
+
+# DECORATOR
+# -------------------------------------------------------------------------    
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):

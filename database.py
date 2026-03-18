@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = (f"mysql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}"
+DATABASE_URL = (f"mysql+mysqlconnector://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}"
                             f"@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 )
 
